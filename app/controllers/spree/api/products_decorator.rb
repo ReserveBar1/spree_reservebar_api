@@ -1,5 +1,4 @@
 Spree::Api::ProductsController.class_eval do
-
   private
 
   def collection
@@ -7,7 +6,7 @@ Spree::Api::ProductsController.class_eval do
     brand_id = Spree::Brand.find_by_title(params['brand']).id
     products = Spree::Product.active.available.where(brand_id: brand_id)
     @collection = { products: products.map { |p|
-      { sku: p.sku, name: p.name, permalink: p.permalink } } }
+      { sku: p.sku, name: p.name, permalink: p.permalink, id: p.id } } }
   end
 
   def object_serialization_options

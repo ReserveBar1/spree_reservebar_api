@@ -13,4 +13,7 @@ Gem::Specification.new do |s|
   s.requirements << 'none'
 
   s.has_rdoc = false
+  s.add_dependency 'spree_core', '1.0.3'
+  s.add_dependency 'spree_auth', '1.0.3'
+  s.add_dependency 'spree_api', '1.0.3'
 end
