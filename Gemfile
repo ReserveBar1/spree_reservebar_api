@@ -4,6 +4,7 @@ gem 'json'
 gem 'sqlite3'
 gem 'rails', '3.1.1'
 gem 'rubyzip', '0.9.9'
+gem 'rabl', '0.9.3'
 # Gems used only for assets and not required
 # in production environments by default.
 group :assets do
@@ -15,7 +16,7 @@ end
 group :test do
   gem 'guard'
   gem 'guard-rspec', '~> 0.5.0'
-  gem 'rspec-rails', '~> 2.8.0'
+  gem 'rspec-rails', '~> 2.14.0'
   gem 'factory_girl_rails', '~> 1.5.0'
 
   platform :ruby_18 do
