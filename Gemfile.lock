@@ -80,7 +80,14 @@ GEM
       execjs
     coffee-script-source (1.9.1.1)
     colorize (0.7.7)
+    columnize (0.9.0)
     database_cleaner (0.7.1)
+    debugger (1.6.8)
+      columnize (>= 0.3.1)
+      debugger-linecache (~> 1.2.0)
+      debugger-ruby_core_source (~> 1.3.5)
+    debugger-linecache (1.2.0)
+    debugger-ruby_core_source (1.3.8)
     deface (1.0.1)
       colorize (>= 0.5.8)
       nokogiri (~> 1.6.0)
@@ -161,6 +168,9 @@ GEM
       coderay (~> 1.1.0)
       method_source (~> 0.8.1)
       slop (~> 3.4)
+    pry-debugger (0.2.3)
+      debugger (~> 1.3)
+      pry (>= 0.9.10, < 0.11.0)
     rabl (0.9.3)
       activesupport (>= 2.3.14)
     rack (1.3.10)
@@ -283,6 +293,7 @@ DEPENDENCIES
   json
   launchy
   mysql2 (~> 0.3.6)
+  pry-debugger
   rabl (= 0.9.3)
   rails (= 3.1.1)
   rcov

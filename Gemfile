@@ -18,6 +18,7 @@ group :test do
   gem 'guard-rspec', '~> 0.5.0'
   gem 'rspec-rails', '~> 2.14.0'
   gem 'factory_girl_rails', '~> 1.5.0'
+  gem 'pry-debugger'
 
   platform :ruby_18 do
     gem 'rcov'

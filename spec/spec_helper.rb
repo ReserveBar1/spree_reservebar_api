@@ -67,12 +67,11 @@ def stub_authentication!
 end
 
 def json_response
-  puts "RESPONSE BODY:: \n #{response}\n #{response.body}\n"
   JSON.parse(response.body)
 end
 
 def assert_unauthorized!
-  response.body.should == "Access Denied\n"
+  json_response.should == { "error" => "You must specify an API key." }
   response.status.should == 401
 end
 
