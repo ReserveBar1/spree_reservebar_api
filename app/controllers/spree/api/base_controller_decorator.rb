@@ -1,6 +1,6 @@
 Spree::Api::BaseController.class_eval do
 
-  before_filter :check_for_api_key
+  #before_filter :check_for_api_key
   before_filter :authenticate_user
 
   rescue_from CanCan::AccessDenied, :with => :unauthorized
@@ -27,8 +27,12 @@ Spree::Api::BaseController.class_eval do
       end
     else
       # Effectively, an anonymous user
-      @current_api_user = Spree.user_class.new
+      @current_api_user = Spree::User.new
     end
+  end
+
+  def current_api_user
+    @current_api_user ||= nil
   end
 
   def error_during_processing(exception)
@@ -42,7 +46,8 @@ Spree::Api::BaseController.class_eval do
   helper_method :api_key
 
   def requires_authentication?
-    true
+    false
+    #true
     #Spree::Api::Config[:requires_authentication]
   end
 
