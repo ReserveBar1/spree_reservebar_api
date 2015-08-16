@@ -19,7 +19,7 @@ module Spree
 
      let(:variant) { Factory(:variant) }
 
-    #before { stub_authentication! }
+      before { stub_authentication! }
       let(:user) { mock_model(Spree::User, :has_role? => true) }
       before { controller.stub :current_user => user }
 
@@ -34,13 +34,6 @@ module Spree
       api_get :show, :id => order.to_param
       response.status.should == 200
       json_response['order'].should have_attributes(actual_attributes)
-    end
-
-    # Regression test for #1992
-    it "can view an order not in a standard state" do
-      Order.any_instance.stub :user => current_api_user
-      order.update_column(:state, 'shipped')
-      api_get :show, :id => order.to_param
     end
 
     it "can not view someone else's order" do
@@ -70,51 +63,7 @@ module Spree
       order.line_items.count.should == 1
       order.line_items.first.variant.should == variant
       order.line_items.first.quantity.should == 5
-      json_response["state"].should == "cart"
-    end
-
-    context "import" do
-      let(:tax_rate) { Factory(:tax_rate, amount: 0.05, calculator: Calculator::DefaultTax.create) }
-      let(:other_variant) { Factory(:variant) }
-
-      # line items come in as an array when importing orders or when
-      # creating both an order an a line item at once
-      let(:order_params) do
-        {
-          :line_items => [
-            { :variant_id => variant.to_param, :quantity => 5 },
-            { :variant_id => other_variant.to_param, :quantity => 5 }
-          ]
-        }
-      end
-
-      before do
-        Zone.stub default_tax: tax_rate.zone
-        current_api_user.stub has_spree_role?: true
-      end
-
-      it "sets channel" do
-        api_post :create, :order => { channel: "amazon" }
-        expect(json_response['channel']).to eq "amazon"
-      end
-
-      it "doesnt persist any automatic tax adjustment" do
-        expect {
-          api_post :create, :order => order_params.merge(:import => true)
-        }.not_to change { Adjustment.count }
-        expect(response.status).to eq 201
-      end
-
-      context "provides sku rather than variant id" do
-        let(:order_params) do
-          { :line_items => [{ :sku => variant.sku, :quantity => 1 }] }
-        end
-
-        it "still finds the variant by sku and persist order" do
-          api_post :create, :order => order_params
-          expect(json_response['line_items'].count).to eq 1
-        end
-      end
+      json_response['order']['state'].should == 'cart'
     end
 
     it "can create an order without any parameters" do
@@ -254,88 +203,5 @@ module Spree
         end
       end
     end
-
-    context "as an admin" do
-      sign_in_as_admin!
-
-      context "with no orders" do
-        before { Spree::Order.delete_all }
-        it "still returns a root :orders key" do
-          api_get :index
-          json_response["orders"].should == []
-        end
-      end
-
-      it "responds with orders updated_at with miliseconds precision" do
-        api_get :index
-        milisecond = order.updated_at.strftime("%L")
-        updated_at = json_response["orders"].first["updated_at"]
-
-        expect(updated_at.split("T").last).to have_content(milisecond)
-      end
-
-      context "with two orders" do
-        before { create(:order) }
-
-
-        it "can view all orders" do
-          api_get :index
-          json_response["orders"].first.should have_attributes(attributes)
-          json_response["count"].should == 2
-          json_response["current_page"].should == 1
-          json_response["pages"].should == 1
-        end
-
-        # Test for #1763
-        it "can control the page size through a parameter" do
-          api_get :index, :per_page => 1
-          json_response["orders"].count.should == 1
-          json_response["orders"].first.should have_attributes(attributes)
-          json_response["count"].should == 1
-          json_response["current_page"].should == 1
-          json_response["pages"].should == 2
-        end
-      end
-
-      context "search" do
-        before do
-          create(:order)
-          Spree::Order.last.update_attribute(:email, 'spree@spreecommerce.com')
-        end
-
-        let(:expected_result) { Spree::Order.last }
-
-        it "can query the results through a parameter" do
-          api_get :index, :q => { :email_cont => 'spree' }
-          json_response["orders"].count.should == 1
-          json_response["orders"].first.should have_attributes(attributes)
-          json_response["orders"].first["email"].should == expected_result.email
-          json_response["count"].should == 1
-          json_response["current_page"].should == 1
-          json_response["pages"].should == 1
-        end
-      end
-
-      context "can cancel an order" do
-        before do
-          Spree::MailMethod.create!(
-            :environment => Rails.env,
-            :preferred_mails_from => "spree@example.com"
-          )
-
-
-          order.completed_at = Time.now
-          order.state = 'complete'
-          order.shipment_state = 'ready'
-          order.save!
-        end
-
-        specify do
-          api_put :cancel, :id => order.to_param
-          json_response["state"].should == "canceled"
-        end
-      end
-    end
-
   end
 end

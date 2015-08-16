@@ -71,7 +71,7 @@ def json_response
 end
 
 def assert_unauthorized!
-  json_response.should == { "error" => "You must specify an API key." }
+  json_response.should == {"error"=>"You are not authorized to perform that action."}
   response.status.should == 401
 end
 

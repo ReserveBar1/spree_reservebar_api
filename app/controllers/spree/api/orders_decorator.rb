@@ -4,11 +4,10 @@ Spree::Api::OrdersController.class_eval do
 
   skip_before_filter :access_denied
   skip_before_filter :check_http_authorization
-  #authorize_resource :class => Spree::Order
+  before_filter :authorize_read!, :except => [:index, :search, :create]
 
   def index
-    # should probably look at turning this into a CanCan step
-    raise CanCan::AccessDenied unless current_api_user.has_spree_role?("admin")
+    raise CanCan::AccessDenied unless current_api_user.has_role?("admin")
     @orders = Order.ransack(params[:q]).result.page(params[:page]).per(params[:per_page])
     respond_with(@orders)
   end
@@ -19,15 +18,12 @@ Spree::Api::OrdersController.class_eval do
 
   def create
     nested_params[:line_items_attributes] = sanitize_line_items(nested_params[:line_items_attributes])
-    @order = Order.build_from_api(current_api_user, nested_params)
-    respond_with(order, :default_template => :show, :status => 201)
+    @order = Spree::Order.build_from_api(current_api_user, nested_params)
+    respond_with(@order, :status => 201 )
   end
 
   def update
-    authorize! :update, Order
-    # Parsing line items through as an update_attributes call in the API will result in
-    # many line items for the same variant_id being created. We must be smarter about this,
-    # hence the use of the update_line_items method, defined within order_decorator.rb.
+    authorize! :update, Spree::Order
     nested_params[:line_items_attributes] = sanitize_line_items(nested_params[:line_items_attributes])
     if order.update_attributes(nested_params)
       order.update!
@@ -47,23 +43,18 @@ Spree::Api::OrdersController.class_eval do
     order.update!
     render :text => nil, :status => 200
   end
+
   private
 
   def nested_params
-    @nested_params ||= map_nested_attributes_keys(Order, params[:order] || {})
+    @nested_params ||= map_nested_attributes_keys(Spree::Order, params[:order] || {})
   end
 
   def sanitize_line_items(line_item_attributes)
     return {} if line_item_attributes.blank?
     line_item_attributes = line_item_attributes.map do |id, attributes|
       attributes ||= id
-
-      # Faux Strong-Parameters code to strip price if user isn't an admin
-      if current_api_user.has_spree_role?("admin")
-        [id, attributes.slice(*Spree::LineItem.attr_accessible[:api])]
-      else
-        [id, attributes.slice(*Spree::LineItem.attr_accessible[:default])]
-      end
+      [id, attributes.slice(*Spree::LineItem.attr_accessible[:api])]
     end
     line_item_attributes = Hash[line_item_attributes].delete_if { |k,v| v.empty? }
   end
@@ -81,6 +72,8 @@ Spree::Api::OrdersController.class_eval do
   end
 
   def authorize_read!
-    authorize! :read, order
+    if order.user != current_api_user
+      raise CanCan::AccessDenied
+    end
   end
 end
