@@ -8,6 +8,14 @@ Spree::Api::BaseController.class_eval do
 
   helper Spree::Api::ApiHelpers
 
+  def create
+    if @object.save
+      render :text => "Resource created\n", :status => 201, :location => object_url
+    else
+      respond_with(@object.errors, :status => 422)
+    end
+  end
+
   def check_for_api_key
     render "spree/api/errors/must_specify_api_key", :status => 401 and return if api_key.blank?
   end

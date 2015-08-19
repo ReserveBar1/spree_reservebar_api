@@ -1,4 +1,10 @@
 Spree::Api::ProductsController.class_eval do
+  def show
+    respond_with(@object) do |format|
+      format.json { render :json => @object.attributes.merge( 'sku' => @object.sku).to_json(object_serialization_options) }
+    end
+  end
+
   private
 
   def collection

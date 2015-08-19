@@ -4,6 +4,7 @@ Spree::Api::OrdersController.class_eval do
 
   skip_before_filter :access_denied
   skip_before_filter :check_http_authorization
+  skip_before_filter :load_resource
   before_filter :authorize_read!, :except => [:index, :search, :create]
 
   def index
@@ -13,7 +14,7 @@ Spree::Api::OrdersController.class_eval do
   end
 
   def show
-    respond_with(@object)
+    respond_with(order)
   end
 
   def create
