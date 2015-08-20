@@ -106,7 +106,7 @@ module Spree
         api_put :update, :id => order.to_param, :order_token => order.token,
                          :order => { :shipping_method_id => @shipping_method.id }
 
-        json_response['order']['shipments'][0]['shipping_method']['name'].should == @shipping_method.name
+        json_response['order']['shipments'][0]['shipment']['shipping_method']['name'] == @shipping_method.name
         json_response['order']['state'].should == 'payment'
         response.status.should == 200
       end
@@ -128,9 +128,9 @@ module Spree
       end
 
       it "can assign a user to the order" do
-        user = create(:user)
+        user = Factory(:user)
         api_put :update, :id => order.to_param, :order_token => order.token, :order => { :user_id => user.id }
-        json_response['user_id'].should == user.id
+        json_response['order']['user_id'].should == user.id
         response.status.should == 200
       end
 
