@@ -61,7 +61,7 @@ Spree::Api::OrdersController.class_eval do
   end
 
   def order
-    @order ||= Order.find_by_number!(params[:id])
+    @order ||= Spree::Order.find_by_number!(params[:id])
   end
 
   def next!(options={})
