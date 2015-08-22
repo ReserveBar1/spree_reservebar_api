@@ -21,6 +21,8 @@ module Spree
       end
 
       def update
+        # TODO: Insert retailer logic after address step
+        @order.retailer = Retailer.first
         authorize! :update, @order, params[:order_token]
         if @order.state == 'complete'
           respond_with(@order, :default_template => 'spree/api/orders/show')
@@ -29,7 +31,6 @@ module Spree
             @order.update_attribute(:user_id, object_params[:user_id])
             object_params.delete(:user_id)
           end
-
           if @order.update_attributes(object_params) && @order.next
             state_callback(:after)
             respond_with(@order)
