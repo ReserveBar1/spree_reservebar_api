@@ -107,3 +107,17 @@ RSpec::Matchers.define :have_attributes do |expected_attributes|
   end
 end
 
+
+Spree::AppConfiguration.class_eval do
+  preference :tax_using_retailer_address, :boolean
+  preference :taxon_preview_max_products, :integer
+  preference :mail_bcc, :string, :default => 'management@reservebar.com'
+  preference :mail_cc, :string
+  preference :mail_notification_to, :string, :default => 'management@reservebar.com'
+  preference :corporate_fedex_account_number, :string
+  preference :use_age_gate_on_all_pages, :boolean, :default => false
+  preference :checkout_zone, :string
+  preference :use_taxcloud, :boolean
+  preference :use_county_based_routing, :boolean, :default => false
+end
+

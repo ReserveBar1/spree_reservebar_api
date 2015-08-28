@@ -1,3 +1,40 @@
+GIT
+  remote: git://github.com/ReserveBar1/active_shipping.git
+  revision: b83a83bee0506a16641d665cb4dfdb5d8a12634a
+  specs:
+    active_shipping (0.9.27)
+      active_utils (>= 1.0.1)
+      activesupport (>= 2.3.5)
+      builder
+      i18n
+
+GIT
+  remote: git://github.com/ReserveBar1/spree_active_shipping.git
+  revision: dd4dea85d14580bff3edfcc3e04feb1846f3291f
+  specs:
+    spree_active_shipping (1.2.5)
+      active_shipping (= 0.9.27)
+      spree_core (~> 1.0.0)
+
+GIT
+  remote: git://github.com/ReserveBar1/spree_reservebar_core.git
+  revision: 4e0ad1b5cf682116adf191cf0966b54438467dae
+  branch: tests
+  specs:
+    spree_reservebar_core (0.10.6)
+      spree_api (= 1.0.3)
+      spree_auth (= 1.0.3)
+      spree_core (= 1.0.3)
+      spree_promo (= 1.0.3)
+
+GIT
+  remote: git://github.com/spree/spree_gateway.git
+  revision: 2fcfb3ffd147b1e74918656304649cea8377fabd
+  branch: 1-1-stable
+  specs:
+    spree_gateway (1.1.0)
+      spree_core (~> 1.0)
+
 PATH
   remote: .
   specs:
@@ -50,6 +87,9 @@ GEM
       multi_json (~> 1.0)
     acts_as_list (0.1.4)
     addressable (2.3.8)
+    akami (1.2.2)
+      gyoku (>= 0.4.0)
+      nokogiri
     arel (2.2.3)
     bcrypt (3.1.10)
     bcrypt-ruby (3.1.5)
@@ -117,8 +157,12 @@ GEM
       thor (>= 0.14.6)
     guard-rspec (0.5.11)
       guard (>= 0.8.4)
+    gyoku (0.4.6)
+      builder (>= 2.1.2)
     highline (1.6.8)
     hike (1.2.3)
+    httpi (1.1.1)
+      rack
     i18n (0.7.0)
     jquery-rails (1.0.19)
       railties (~> 3.0)
@@ -155,6 +199,7 @@ GEM
       railties (>= 3.0.0)
     nokogiri (1.6.6.2)
       mini_portile (~> 0.6.0)
+    nori (1.1.5)
     orm_adapter (0.0.7)
     paperclip (2.5.0)
       activerecord (>= 2.3.0)
@@ -225,6 +270,14 @@ GEM
       railties (~> 3.1.0)
       sass (>= 3.1.10)
       tilt (~> 1.3.2)
+    savon (1.2.0)
+      akami (~> 1.2.0)
+      builder (>= 2.1.2)
+      gyoku (~> 0.4.5)
+      httpi (~> 1.1.0)
+      nokogiri (>= 1.4.0)
+      nori (~> 1.1.0)
+      wasabi (~> 2.5.0)
     selenium-webdriver (2.16.0)
       childprocess (>= 0.2.5)
       ffi (~> 1.0.9)
@@ -258,6 +311,9 @@ GEM
       rails (>= 3.1.1, <= 3.1.4)
       state_machine (= 1.1.1)
       stringex (~> 1.3.0)
+    spree_promo (1.0.3)
+      spree_auth (= 1.0.3)
+      spree_core (= 1.0.3)
     sprockets (2.0.5)
       hike (~> 1.2)
       rack (~> 1.0)
@@ -265,6 +321,10 @@ GEM
     sqlite3 (1.3.10)
     state_machine (1.1.1)
     stringex (1.3.3)
+    tax_cloud (0.2.0)
+      activesupport (~> 3.0)
+      i18n (~> 0.6)
+      savon (~> 1.2.0)
     thor (0.14.6)
     tilt (1.3.7)
     treetop (1.4.15)
@@ -276,6 +336,9 @@ GEM
       json (>= 1.8.0)
     warden (1.0.6)
       rack (>= 1.0)
+    wasabi (2.5.1)
+      httpi (~> 1.0)
+      nokogiri (>= 1.4.0)
     xpath (0.1.4)
       nokogiri (~> 1.3)
 
@@ -283,6 +346,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  active_shipping!
   capybara (= 1.1.4)
   coffee-rails (~> 3.1.1)
   database_cleaner (= 0.7.1)
@@ -303,8 +367,12 @@ DEPENDENCIES
   selenium-webdriver (= 2.16.0)
   shoulda-matchers (~> 1.0.0)
   simplecov
+  spree_active_shipping!
+  spree_gateway!
   spree_reservebar_api!
+  spree_reservebar_core!
   sqlite3
+  tax_cloud (= 0.2.0)
   uglifier
 
 BUNDLED WITH
