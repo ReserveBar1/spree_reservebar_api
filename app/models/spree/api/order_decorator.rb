@@ -7,14 +7,7 @@ Spree::Order.class_eval do
   def self.build_from_api(user, params)
     begin
       order = create!
-
-      #order.create_shipments_from_api params.delete(:shipments_attributes) || []
       order.create_line_items_from_api params.delete(:line_items_attributes) || {}
-      #order.create_adjustments_from_api params.delete(:adjustments_attributes) || []
-      #order.create_payments_from_api params.delete(:payments_attributes) || []
-      #order.complete_from_api params.delete(:completed_at)
-
-      #destroy_automatic_taxes_on_import(order, params)
 
       if user.has_role? "admin"
         order.update_attributes!(params, without_protection: true)

@@ -5,6 +5,7 @@ Spree::Core::Engine.routes.prepend do
     resources :checkouts
     resources :variants, :only => [:index] do
     end
+    resources :shipping_methods, :only => [:index]
 
     resources :orders do
       resources :return_authorizations

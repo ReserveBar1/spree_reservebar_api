@@ -16,7 +16,8 @@ module Spree
       @shipping_method = Factory(:shipping_method, :zone => country_zone)
       @payment_method = Factory(:payment_method)
 
-      @retailer = Retailer.create(name: 'first retailer', payment_method: @payment_method, phone: '1234567890', email: 'test@test.com')
+      @retailer = Retailer.create(name: 'first retailer', payment_method: @payment_method,
+                                  phone: '1234567890', email: 'test@test.com')
     end
 
     let(:user) { Factory(:user) }
