@@ -16,4 +16,5 @@ Gem::Specification.new do |s|
   s.add_dependency 'spree_core', '1.0.3'
   s.add_dependency 'spree_auth', '1.0.3'
   s.add_dependency 'spree_api', '1.0.3'
+  s.add_dependency 'rabl', '0.9.3'
 end

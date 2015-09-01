@@ -17,15 +17,14 @@ module Spree
       #probably skip this
       def create
         @order = Order.build_from_api(current_api_user, nested_params)
-        respond_with(@order, :default_template => 'spree/api/orders/show', :status => 201)
+        render file: 'spree/api/orders/create.rabl'
       end
 
       def update
-        # TODO: Insert retailer logic after address step
-        @order.retailer = Retailer.first
         authorize! :update, @order, params[:order_token]
         if @order.state == 'complete'
           respond_with(@order, :default_template => 'spree/api/orders/show')
+          render file: 'spree/api/orders/show.rabl'
         else
           if object_params && object_params[:user_id].present?
             @order.update_attribute(:user_id, object_params[:user_id])
@@ -33,9 +32,9 @@ module Spree
           end
           if @order.update_attributes(object_params) && @order.next
             state_callback(:after)
-            respond_with(@order)
+            render file: 'spree/api/checkouts/update.rabl'
           else
-            respond_with(@order, :default_template => 'spree/api/orders/could_not_transition', :status => 422)
+            render file: 'spree/api/orders/could_not_transition.rabl'
           end
         end
       end

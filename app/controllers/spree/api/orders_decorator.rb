@@ -14,13 +14,13 @@ Spree::Api::OrdersController.class_eval do
   end
 
   def show
-    respond_with(order)
+    render file: 'spree/api/orders/show.rabl'
   end
 
   def create
     nested_params[:line_items_attributes] = sanitize_line_items(nested_params[:line_items_attributes])
     @order = Spree::Order.build_from_api(current_api_user, nested_params)
-    respond_with(@order, :status => 201 )
+    render file: 'spree/api/orders/create.rabl'
   end
 
   def update
