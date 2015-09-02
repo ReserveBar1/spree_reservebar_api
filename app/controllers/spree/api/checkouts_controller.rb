@@ -5,6 +5,7 @@ module Spree
       skip_before_filter :load_resource
       before_filter :load_order, :only => :update
       before_filter :associate_user, :only => :update
+      before_filter :set_address_state_id, :only => :update
 
       #before_filter :associate_user, only: :update
 
@@ -17,7 +18,6 @@ module Spree
       #probably skip this
       def create
         @order = Order.build_from_api(current_api_user, nested_params)
-        #render file: 'spree/api/orders/create.rabl'
         render json: response_hash(@order).to_json
       end
 
@@ -26,7 +26,6 @@ module Spree
         @order.retailer = Retailer.first
         if @order.state == 'complete'
           respond_with(@order, :default_template => 'spree/api/orders/show')
-          render file: 'spree/api/orders/show.rabl'
         else
           if object_params && object_params[:user_id].present?
             @order.update_attribute(:user_id, object_params[:user_id])
@@ -34,10 +33,8 @@ module Spree
           end
           if @order.update_attributes(object_params) && @order.next
             state_callback(:after)
-            #render file: 'spree/api/checkouts/update.rabl'
             render json: response_hash(@order).to_json
           else
-            #render file: 'spree/api/orders/could_not_transition.rabl'
             render json: {error: "Could not transition order state"}.to_json
           end
         end
@@ -123,6 +120,16 @@ module Spree
           rh[:order][:bill_address][:id] = order.bill_address.id
         end
         rh
+      end
+
+      def set_address_state_id
+        [:bill_address_attributes, :ship_address_attributes].each do |address_type|
+          if params[:order] && params[:order][address_type]
+            state = params[:order][address_type].delete(:state)
+            state = Spree::State.find_by_abbr(state)
+            params[:order][address_type][:state_id] = state.id
+          end
+        end
       end
     end
   end
