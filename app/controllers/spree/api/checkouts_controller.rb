@@ -115,6 +115,14 @@ module Spree
           rh[:order][:line_items] << { quantity: li.quantity, price: li.price, variant: {name: li.variant.name}}
           rh
         end
+        if order.ship_address && order.bill_address
+          rh[:order][:ship_address] = {}
+          rh[:order][:bill_address] = {}
+          rh[:order][:ship_address][:firstname] = order.ship_address.firstname
+          rh[:order][:ship_address][:lastname] = order.ship_address.lastname
+          rh[:order][:bill_address][:id] = order.bill_address.id
+        end
+        rh
       end
     end
   end
