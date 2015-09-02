@@ -20,7 +20,8 @@ Spree::Api::OrdersController.class_eval do
   def create
     nested_params[:line_items_attributes] = sanitize_line_items(nested_params[:line_items_attributes])
     @order = Spree::Order.build_from_api(current_api_user, nested_params)
-    render file: 'spree/api/orders/create.rabl'
+    #render file: 'spree/api/orders/create'
+    render :json => response_hash.to_json
   end
 
   def update
@@ -75,6 +76,18 @@ Spree::Api::OrdersController.class_eval do
   def authorize_read!
     if order.user != current_api_user
       raise CanCan::AccessDenied
+    end
+  end
+
+  def response_hash
+    rh = {order: { token: order.token, line_items: [] } }
+    rh =  order.attributes.keys.each_with_object(rh) do |k|
+      rh[:order][k] = order.attributes[k]
+      rh
+    end
+    order.line_items.each_with_object(rh) do |li|
+      rh[:order][:line_items] << { quantity: li.quantity, price: li.price, variant: {name: li.variant.name}}
+      rh
     end
   end
 end

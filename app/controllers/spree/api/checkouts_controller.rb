@@ -17,11 +17,13 @@ module Spree
       #probably skip this
       def create
         @order = Order.build_from_api(current_api_user, nested_params)
-        render file: 'spree/api/orders/create.rabl'
+        #render file: 'spree/api/orders/create.rabl'
+        render json: response_hash(@order).to_json
       end
 
       def update
         authorize! :update, @order, params[:order_token]
+        @order.retailer = Retailer.first
         if @order.state == 'complete'
           respond_with(@order, :default_template => 'spree/api/orders/show')
           render file: 'spree/api/orders/show.rabl'
@@ -32,25 +34,17 @@ module Spree
           end
           if @order.update_attributes(object_params) && @order.next
             state_callback(:after)
-            render file: 'spree/api/checkouts/update.rabl'
+            #render file: 'spree/api/checkouts/update.rabl'
+            render json: response_hash(@order).to_json
           else
-            render file: 'spree/api/orders/could_not_transition.rabl'
+            #render file: 'spree/api/orders/could_not_transition.rabl'
+            render json: {error: "Could not transition order state"}.to_json
           end
         end
       end
 
 
       def object_params
-        # For payment step, filter order parameters to produce the expected nested attributes for a single payment and its source, discarding attributes for payment methods other than the one selected
-        # respond_to check is necessary due to issue described in #2910
-        #if @order.has_checkout_step?("payment") && @order.payment?
-          #if params[:payment_source].present? && source_params = params.delete(:payment_source)[params[:order][:payments_attributes].first[:payment_method_id].underscore]
-            #params[:order][:payments_attributes].first[:source_attributes] = source_params
-          #end
-          #if params[:order].present? && params[:order][:payments_attributes]
-            #params[:order][:payments_attributes].first[:amount] = @order.total
-          #end
-        #end
         params[:order]
       end
 
@@ -94,13 +88,13 @@ module Spree
         @order.payments.destroy_all if request.put?
       end
 
-      def next!(options={})
-        if @order.valid? && @order.next
-          render 'spree/api/orders/show', :status => options[:status] || 200
-        else
-          render 'spree/api/orders/could_not_transition', :status => 422
-        end
-      end
+      #def next!(options={})
+        #if @order.valid? && @order.next
+          #render 'spree/api/orders/show', :status => options[:status] || 200
+        #else
+          #render 'spree/api/orders/could_not_transition', :status => 422
+        #end
+      #end
 
       def has_checkout_step?(step)
         step.present? ? self.checkout_steps.include?(step) : false
@@ -109,6 +103,18 @@ module Spree
 
       def order_url(order)
         spree.api_order_url(order)
+      end
+
+      def response_hash(order)
+        rh = {order: { token: order.token, line_items: [] } }
+        rh =  order.attributes.keys.each_with_object(rh) do |k|
+          rh[:order][k] = order.attributes[k]
+          rh
+        end
+        order.line_items.each_with_object(rh) do |li|
+          rh[:order][:line_items] << { quantity: li.quantity, price: li.price, variant: {name: li.variant.name}}
+          rh
+        end
       end
     end
   end
