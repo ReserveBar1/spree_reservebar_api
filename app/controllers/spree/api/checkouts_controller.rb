@@ -23,7 +23,7 @@ module Spree
 
       def update
         authorize! :update, @order, params[:order_token]
-        @order.retailer = Retailer.first
+        @order.retailer = Retailer.find_by_dba_name "NY3"
         if @order.state == 'complete'
           respond_with(@order, :default_template => 'spree/api/orders/show')
         else
