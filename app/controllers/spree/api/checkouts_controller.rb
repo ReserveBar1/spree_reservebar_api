@@ -1,21 +1,17 @@
+require 'card_reuse'
+
 module Spree
   module Api
     class CheckoutsController < Spree::Api::BaseController
+
+      include CardReuse
+
       skip_before_filter :check_http_authorization
       skip_before_filter :load_resource
       before_filter :load_order, :only => :update
       before_filter :associate_user, :only => :update
       before_filter :set_address_state_id, :only => :update
 
-      #before_filter :associate_user, only: :update
-
-      #include Spree::Core::ControllerHelpers::Auth
-      #include Spree::Core::ControllerHelpers::Order
-      ## This before_filter comes from Spree::Core::ControllerHelpers::Order
-      #skip_before_filter :set_current_order
-
-
-      #probably skip this
       def create
         @order = Order.build_from_api(current_api_user, nested_params)
         render json: response_hash(@order).to_json
@@ -23,25 +19,52 @@ module Spree
 
       def update
         authorize! :update, @order, params[:order_token]
-        @order.retailer = Retailer.find_by_dba_name "NY3"
-        if @order.state == 'complete'
-          respond_with(@order, :default_template => 'spree/api/orders/show')
-        else
-          if object_params && object_params[:user_id].present?
-            @order.update_attribute(:user_id, object_params[:user_id])
-            object_params.delete(:user_id)
-          end
-          if @order.update_attributes(object_params) && @order.next
+        if @order.update_attributes(object_params)
+          #fire_event('spree.checkout.update')
+
+          if @order.next
             state_callback(:after)
-            render json: response_hash(@order).to_json
           else
             render json: {error: "Could not transition order state"}.to_json
+            return
           end
+          render json: response_hash(@order).to_json
+        else
+          render json: response_hash(@order).to_json
         end
       end
 
 
       def object_params
+        if @order.payment?
+          if params[:payment_source].present? && source_params = params.delete(:payment_source)[params[:order][:payments_attributes].first[:payment_method_id].underscore]
+
+            if params[:order][:bill_address_id].present? && params[:order][:bill_address_id] != '0'
+              source_params[:address_id] = params[:order][:bill_address_id]
+            elsif params[:bill_address].present?
+              @order.bill_address_attributes = params[:bill_address]
+              bill_address = @order.bill_address
+              if bill_address && bill_address.valid?
+                @order.update_attribute_without_callbacks(:bill_address_id, bill_address.id)
+                bill_address.update_attribute(:user_id, current_user.id) if current_user
+                params[:order].delete(:bill_address_id)
+                object_params.delete(:bill_address_id)
+              else
+                raise Exceptions::NewBillAddressError
+              end
+              @order.reload
+              source_params[:address_id] = @order.bill_address_id
+            else
+              raise 'No Billing Address'
+            end
+            source_params[:device_data] = params[:device_data]
+            params[:order][:payments_attributes].first[:source_attributes] = source_params
+          end
+
+          if params[:order].present? && params[:order][:payments_attributes].present?
+            params[:order][:payments_attributes].first[:amount] = @order.total
+          end
+        end
         params[:order]
       end
 
@@ -53,6 +76,10 @@ module Spree
       # up to a step within checkout_steps, such as a registration step
       def skip_state_validation?
         false
+      end
+
+      def current_order(create_if_necessary = false)
+        @order = Spree::Order.find_by_number!(params[:id])
       end
 
       def load_order
@@ -80,18 +107,6 @@ module Spree
         return if params[:order].present?
         @order.shipping_method ||= (@order.rate_hash.first && @order.rate_hash.first[:shipping_method])
       end
-
-      def before_payment
-        @order.payments.destroy_all if request.put?
-      end
-
-      #def next!(options={})
-        #if @order.valid? && @order.next
-          #render 'spree/api/orders/show', :status => options[:status] || 200
-        #else
-          #render 'spree/api/orders/could_not_transition', :status => 422
-        #end
-      #end
 
       def has_checkout_step?(step)
         step.present? ? self.checkout_steps.include?(step) : false
@@ -131,6 +146,14 @@ module Spree
           end
         end
       end
+
+      def before_payment
+        @order.payments.destroy_all if request.put?
+        @order.bill_address = Spree::Address.default
+        @cards = all_cards_for_user(@order.user, @order.retailer)
+        @cards = @cards.reject { |c| c.expired? }
+      end
+
     end
   end
 end
