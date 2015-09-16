@@ -28,6 +28,13 @@ GIT
       spree_promo (= 1.0.3)
 
 GIT
+  remote: git://github.com/ReserveBar1/spree_reservebar_reuse_credit_card.git
+  revision: 499d6c6bb5b7b250e3bdbd4d2c10fe939d9412d5
+  specs:
+    spree_reservebar_reuse_credit_card (1.1.0)
+      spree_core (~> 1.0.0)
+
+GIT
   remote: git://github.com/spree/spree_gateway.git
   revision: 2fcfb3ffd147b1e74918656304649cea8377fabd
   branch: 1-1-stable
@@ -39,6 +46,7 @@ PATH
   remote: .
   specs:
     spree_reservebar_api (0.0.1)
+      rabl (= 0.9.3)
       spree_api (= 1.0.3)
       spree_auth (= 1.0.3)
       spree_core (= 1.0.3)
@@ -371,6 +379,7 @@ DEPENDENCIES
   spree_gateway!
   spree_reservebar_api!
   spree_reservebar_core!
+  spree_reservebar_reuse_credit_card!
   sqlite3
   tax_cloud (= 0.2.0)
   uglifier

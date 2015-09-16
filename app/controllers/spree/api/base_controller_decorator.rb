@@ -78,6 +78,18 @@ Spree::Api::BaseController.class_eval do
 
   private
 
+  def build_resource
+    if parent.present?
+      parent.send(controller_name).build(params[object_name])
+    else
+      if model_class == Spree::Order
+        return
+      else
+        model_class.new(params[object_name])
+      end
+    end
+  end
+
   def check_http_authorization
     if request.headers['HTTP_AUTHORIZATION'].blank?
       render "spree/api/errors/unauthorized", :status => 401
@@ -102,15 +114,7 @@ Spree::Api::BaseController.class_eval do
     end
   end
 
-  def build_resource
-    if parent.present?
-      parent.send(controller_name).build(params[object_name])
-    else
-      if model_class == Spree::Order
-        return
-      else
-        model_class.new(params[object_name])
-      end
-    end
+  def not_found
+    render :text => { :exception => 'Object not found'}.to_json, :status => 404
   end
 end

@@ -9,6 +9,7 @@ gem 'rabl', '0.9.3'
 gem 'tax_cloud', '0.2.0'
 
 gem 'spree_reservebar_core', :git => 'git://github.com/ReserveBar1/spree_reservebar_core.git', :branch => 'tests'
+gem 'spree_reservebar_reuse_credit_card', :git => 'git://github.com/ReserveBar1/spree_reservebar_reuse_credit_card.git'
 gem 'spree_gateway', :git => 'git://github.com/spree/spree_gateway.git', :branch => '1-1-stable'
 gem 'active_shipping', :git => 'git://github.com/ReserveBar1/active_shipping.git'
 gem 'spree_active_shipping', :git => 'git://github.com/ReserveBar1/spree_active_shipping.git'

@@ -32,21 +32,21 @@ module Spree
         api_post :create
 
         json_response['order']['number'].should be_present
-        response.status.should == 201
+        response.status.should == 200
       end
 
       it "should not have a user by default" do
         api_post :create
 
         json_response['user_id'].should_not be_present
-        response.status.should == 201
+        response.status.should == 200
       end
 
       it "should not have an email by default" do
         api_post :create
 
         json_response['email'].should_not be_present
-        response.status.should == 201
+        response.status.should == 200
       end
     end
 
@@ -58,6 +58,7 @@ module Spree
         Order.any_instance.stub(:payment_required? => true)
       end
 
+      # Broken - email gets added back (wrong email)
       it "will return an error if the recently created order cannot transition from cart to address" do
         order.state.should eq "cart"
         order.email = nil # email is necessary to transition from cart to address
@@ -76,6 +77,7 @@ module Spree
         order.reload.state.should eq "address"
       end
 
+      # Broken
       it "will return an error if the order cannot transition" do
         order.update_column(:state, "address")
         api_put :update, :id => order.to_param, :order_token => order.token

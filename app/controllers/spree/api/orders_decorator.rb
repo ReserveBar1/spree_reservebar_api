@@ -7,11 +7,8 @@ Spree::Api::OrdersController.class_eval do
   skip_before_filter :load_resource
   before_filter :authorize_read!, :except => [:index, :search, :create]
 
-  def index
-    raise CanCan::AccessDenied unless current_api_user.has_role?("admin")
-    @orders = Order.ransack(params[:q]).result.page(params[:page]).per(params[:per_page])
-    respond_with(@orders)
-  end
+  before_filter :check_bottle_number_limit, :only => [:create]
+
 
   def show
     render file: 'spree/api/orders/show.rabl'
@@ -21,30 +18,9 @@ Spree::Api::OrdersController.class_eval do
     nested_params[:line_items_attributes] = sanitize_line_items(nested_params[:line_items_attributes])
     @order = Spree::Order.build_from_api(current_api_user, nested_params)
     #render file: 'spree/api/orders/create'
-    render :json => response_hash.to_json
+    render :json => response_hash.to_json, :status => 201
   end
 
-  def update
-    authorize! :update, Spree::Order
-    nested_params[:line_items_attributes] = sanitize_line_items(nested_params[:line_items_attributes])
-    if order.update_attributes(nested_params)
-      order.update!
-      respond_with(order, :default_template => :show)
-    else
-      invalid_resource!(order)
-    end
-  end
-
-  def cancel
-    order.cancel!
-    render :show
-  end
-
-  def empty
-    order.line_items.destroy_all
-    order.update!
-    render :text => nil, :status => 200
-  end
 
   private
 
@@ -88,6 +64,31 @@ Spree::Api::OrdersController.class_eval do
     order.line_items.each_with_object(rh) do |li|
       rh[:order][:line_items] << { quantity: li.quantity, price: li.price, variant: {name: li.variant.name}}
       rh
+    end
+  end
+
+  def check_bottle_number_limit
+    if bottle_quantity > 12
+      render :text => { :exception => 'Cannot order more than 12 bottles'}.to_json, :status => 404
+    end
+    if ardbeg_quantity > 1
+      render :text => { :exception => 'Cannot order more than 1 bottle of Ardbeg Supernova'}.to_json,
+             :status => 404
+    end
+  end
+
+  def bottle_quantity
+    return 0 unless params[:order] && params[:order][:line_items]
+    params[:order][:line_items].sum do |index, attributes|
+      attributes['quantity'].to_i
+    end
+  end
+
+  def ardbeg_quantity
+    ardbeg = Spree::Product.find_by_permalink('ardbeg-supernova-2015')
+    return 0 unless ardbeg
+    params[:order][:line_items].sum do |index, attributes|
+      attributes['sku'] == ardbeg.sku ? attributes['quantity'].to_i : 0
     end
   end
 end
