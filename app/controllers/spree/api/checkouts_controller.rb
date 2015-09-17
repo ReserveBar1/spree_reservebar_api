@@ -4,8 +4,10 @@ module Spree
   module Api
     class CheckoutsController < Spree::Api::BaseController
 
+
       include CardReuse
 
+      ssl_required [:create, :update]
       skip_before_filter :check_http_authorization
       skip_before_filter :load_resource
       before_filter :load_order, :only => :update
