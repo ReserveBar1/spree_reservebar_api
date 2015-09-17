@@ -5,6 +5,7 @@ module Spree
     class CheckoutsController < Spree::Api::BaseController
 
 
+      include SslRequirement
       include CardReuse
 
       ssl_required [:create, :update]

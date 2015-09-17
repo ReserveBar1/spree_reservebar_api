@@ -1,7 +1,10 @@
 
 Spree::Api::OrdersController.class_eval do
+  include SslRequirement
+
   respond_to :json
 
+  ssl_allowed
   skip_before_filter :access_denied
   skip_before_filter :check_http_authorization
   skip_before_filter :load_resource
