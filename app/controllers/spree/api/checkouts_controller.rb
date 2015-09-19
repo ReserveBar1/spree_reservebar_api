@@ -40,28 +40,20 @@ module Spree
 
       def object_params
         if @order.payment?
-          if params[:payment_source].present? && source_params = params.delete(:payment_source)[params[:order][:payments_attributes].first[:payment_method_id].underscore]
-
-            if params[:order][:bill_address_id].present? && params[:order][:bill_address_id] != '0'
-              source_params[:address_id] = params[:order][:bill_address_id]
-            elsif params[:bill_address].present?
-              @order.bill_address_attributes = params[:bill_address]
-              bill_address = @order.bill_address
-              if bill_address && bill_address.valid?
-                @order.update_attribute_without_callbacks(:bill_address_id, bill_address.id)
-                bill_address.update_attribute(:user_id, current_user.id) if current_user
-                params[:order].delete(:bill_address_id)
-                object_params.delete(:bill_address_id)
-              else
-                raise Exceptions::NewBillAddressError
-              end
-              @order.reload
-              source_params[:address_id] = @order.bill_address_id
+          if params[:bill_address].present?
+            @order.bill_address_attributes = params[:bill_address]
+            bill_address = @order.bill_address
+            if bill_address && bill_address.valid?
+              @order.update_attribute_without_callbacks(:bill_address_id, bill_address.id)
+              bill_address.update_attribute(:user_id, current_user.id) if current_user
+              params[:order].delete(:bill_address_id)
             else
-              raise 'No Billing Address'
+              raise Exceptions::NewBillAddressError
             end
-            source_params[:device_data] = params[:device_data]
-            params[:order][:payments_attributes].first[:source_attributes] = source_params
+            @order.reload
+            params[:order][:payments_attributes].first[:source_attributes][:address_id] = @order.bill_address_id
+          else
+              raise 'No Billing Address'
           end
 
           if params[:order].present? && params[:order][:payments_attributes].present?
@@ -141,6 +133,11 @@ module Spree
       end
 
       def set_address_state_id
+        if params[:bill_address]
+            state = params[:bill_address].delete(:state)
+            state = Spree::State.find_by_abbr(state)
+            params[:bill_address][:state_id] = state.id
+        end
         [:bill_address_attributes, :ship_address_attributes].each do |address_type|
           if params[:order] && params[:order][address_type]
             state = params[:order][address_type].delete(:state)
