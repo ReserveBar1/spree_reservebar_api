@@ -11,12 +11,24 @@ Spree::Api::ProductsController.class_eval do
     return 'brand needed' unless params['brand'].present?
     brand_id = Spree::Brand.find_by_title(params['brand']).id
     products = Spree::Product.active.available.where(brand_id: brand_id)
-    @collection = { products: products.map { |p|
-      { sku: p.sku, name: p.name, permalink: p.permalink, id: p.id, states_available: p.ships_to_states } } }
+    @collection = {
+      products: products.map { |p|
+        { sku: p.sku,
+          name: p.name,
+          permalink: p.permalink,
+          id: p.id,
+          states_available: product_ships_to_states(p)
+        }
+      }
+    }
   end
 
   def object_serialization_options
     # overiding method provided by SpreeApi
+  end
+
+  def product_ships_to_states(product)
+    product.ships_to_states.sub('and','').split(',').to_a.map(&:strip)
   end
 
 end
