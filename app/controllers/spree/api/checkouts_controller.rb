@@ -21,6 +21,7 @@ module Spree
       end
 
       def update
+        return render json: response_hash(@order).to_json if @order.state == 'complete'
         authorize! :update, @order, params[:order_token]
         if @order.update_attributes(object_params)
           #fire_event('spree.checkout.update')
@@ -28,12 +29,12 @@ module Spree
           if @order.next
             state_callback(:after)
           else
-            render json: {error: "Could not transition order state"}.to_json
+            render json: { error: "Could not transition order state" }.to_json, :status => 400
             return
           end
           render json: response_hash(@order).to_json
         else
-          render json: response_hash(@order).to_json
+          render json: { error: "Could not transition order state" }.to_json, :status => 400
         end
       end
 
@@ -136,12 +137,13 @@ module Spree
         if params[:bill_address]
             state = params[:bill_address].delete(:state)
             state = Spree::State.find_by_abbr(state)
-            params[:bill_address][:state_id] = state.id
+            params[:bill_address][:state_id] = state.id if state
         end
         [:bill_address_attributes, :ship_address_attributes].each do |address_type|
           if params[:order] && params[:order][address_type]
             state = params[:order][address_type].delete(:state)
             state = Spree::State.find_by_abbr(state)
+            next unless state
             params[:order][address_type][:state_id] = state.id
           end
         end

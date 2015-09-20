@@ -44,26 +44,25 @@ RSpec.configure do |config|
   end
 
   config.include Spree::Core::Engine.routes.url_helpers,
-    :example_group => {
-      :file_path => /\bspec\/requests\//
-    }
+                 example_group: {
+                   file_path: %r{\bspec\/requests\/}
+                 }
 
-  config.include Devise::TestHelpers, :type => :controller
-  config.include Rack::Test::Methods, :type => :request
+  config.include Devise::TestHelpers, type: :controller
+  config.include Rack::Test::Methods, type: :request
 end
 
 def api_login(user)
-  authorize user.authentication_token, "X"
+  authorize user.authentication_token, 'X'
 end
 
 def current_api_user
-  @current_api_user ||= stub_model(Spree::User, :email => "spree@example.com")
+  @current_api_user ||= stub_model(Spree::User, email: 'spree@example.com')
 end
-
 
 def stub_authentication!
   controller.stub :check_for_api_key
-  Spree::User.stub :find_by_spree_api_key => current_api_user
+  Spree::User.stub find_by_spree_api_key: current_api_user
 end
 
 def json_response
@@ -71,7 +70,7 @@ def json_response
 end
 
 def assert_unauthorized!
-  json_response.should == {"error"=>"You are not authorized to perform that action."}
+  json_response.should == { 'error' => 'Invalid order token' }
   response.status.should == 401
 end
 

@@ -8,6 +8,7 @@ Spree::Api::OrdersController.class_eval do
   skip_before_filter :access_denied
   skip_before_filter :check_http_authorization
   skip_before_filter :load_resource
+  skip_before_filter :check_for_api_key, :only => [:create]
   before_filter :authorize_read!, :except => [:index, :search, :create]
 
   before_filter :check_bottle_number_limit, :only => [:create]
@@ -72,10 +73,10 @@ Spree::Api::OrdersController.class_eval do
 
   def check_bottle_number_limit
     if bottle_quantity > 12
-      render :text => { :exception => 'Cannot order more than 12 bottles'}.to_json, :status => 404
+      render :json => { :error => 'Cannot order more than 12 bottles'}.to_json, :status => 404
     end
     if ardbeg_quantity > 1
-      render :text => { :exception => 'Cannot order more than 1 bottle of Ardbeg Supernova'}.to_json,
+      render :json => { :error => 'Cannot order more than 1 bottle of Ardbeg Supernova'}.to_json,
              :status => 404
     end
   end

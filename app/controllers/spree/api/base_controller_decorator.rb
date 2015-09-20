@@ -1,6 +1,6 @@
 Spree::Api::BaseController.class_eval do
 
-  #before_filter :check_for_api_key
+  before_filter :check_for_api_key
   before_filter :authenticate_user
 
   rescue_from CanCan::AccessDenied, :with => :unauthorized
@@ -30,8 +30,11 @@ Spree::Api::BaseController.class_eval do
 
   def authenticate_user
     if requires_authentication? || api_key.present?
-      unless @current_api_user = Spree::User.find_by_spree_api_key(api_key.to_s)
-        render "spree/api/errors/invalid_api_key", :status => 401 and return
+      unless token_order = Spree::TokenizedPermission.find_by_token(api_key).try(:permissable)
+        render json: { error: "Invalid order token" }.to_json, :status => 401 and return
+      end
+      unless @current_api_user = token_order.user
+        render json: { error: "Invalid order token" }.to_json, :status => 401 and return
       end
     else
       # Effectively, an anonymous user
@@ -44,19 +47,17 @@ Spree::Api::BaseController.class_eval do
   end
 
   def error_during_processing(exception)
-    render :text => { :exception => exception.message }.to_json,
+    render :text => { :error => exception.message }.to_json,
       :status => 422 and return
   end
 
   def api_key
-    request.headers["X-Spree-Token"] || params[:token]
+    request.headers["X-Spree-Token"] || params[:order_token]
   end
   helper_method :api_key
 
   def requires_authentication?
-    false
-    #true
-    #Spree::Api::Config[:requires_authentication]
+    true
   end
 
   def unauthorized
@@ -115,6 +116,6 @@ Spree::Api::BaseController.class_eval do
   end
 
   def not_found
-    render :text => { :exception => 'Object not found'}.to_json, :status => 404
+    render :text => { :error => 'Object not found'}.to_json, :status => 404
   end
 end

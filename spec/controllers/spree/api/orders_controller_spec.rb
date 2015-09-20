@@ -38,6 +38,10 @@ module Spree
       assert_unauthorized!
     end
 
+    it 'can retry a checkout step after an error' do
+      pending ''
+    end
+
     it "can create an order" do
       variant = Factory(:variant)
       # api uses sku instead of id
@@ -55,7 +59,7 @@ module Spree
       # api uses sku instead of id
       api_post :create, :order => { :line_items => { "0" => { :variant_id => variant.sku, :quantity => 13 } } }
       response.status.should == 404
-      json_response['exception'].should == 'Cannot order more than 12 bottles'
+      json_response['error'].should == 'Cannot order more than 12 bottles'
     end
   end
 end
