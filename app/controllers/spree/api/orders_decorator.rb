@@ -8,15 +8,15 @@ Spree::Api::OrdersController.class_eval do
   skip_before_filter :access_denied
   skip_before_filter :check_http_authorization
   skip_before_filter :load_resource
-  skip_before_filter :check_for_api_key, :only => [:create]
-  skip_before_filter :authenticate_user, :only => [:create]
+  skip_before_filter :check_for_api_key
+  skip_before_filter :authenticate_user
   before_filter :authorize_read!, :except => [:create]
 
   before_filter :check_bottle_number_limit, :only => [:create]
 
 
   def show
-    render file: 'spree/api/orders/show.rabl'
+    render :json => response_hash.to_json, :status => 201
   end
 
   def create
