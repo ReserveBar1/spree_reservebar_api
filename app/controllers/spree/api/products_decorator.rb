@@ -1,4 +1,5 @@
 Spree::Api::ProductsController.class_eval do
+  skip_before_filter :authenticate_user
   skip_before_filter :check_for_api_key
 
   def show

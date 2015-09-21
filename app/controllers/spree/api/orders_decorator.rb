@@ -9,7 +9,8 @@ Spree::Api::OrdersController.class_eval do
   skip_before_filter :check_http_authorization
   skip_before_filter :load_resource
   skip_before_filter :check_for_api_key, :only => [:create]
-  before_filter :authorize_read!, :except => [:index, :search, :create]
+  skip_before_filter :authenticate_user, :only => [:create]
+  before_filter :authorize_read!, :except => [:create]
 
   before_filter :check_bottle_number_limit, :only => [:create]
 
@@ -20,7 +21,7 @@ Spree::Api::OrdersController.class_eval do
 
   def create
     nested_params[:line_items_attributes] = sanitize_line_items(nested_params[:line_items_attributes])
-    @order = Spree::Order.build_from_api(current_api_user, nested_params)
+    @order = Spree::Order.build_from_api(Spree::User.new, nested_params)
     #render file: 'spree/api/orders/create'
     render :json => response_hash.to_json, :status => 201
   end
