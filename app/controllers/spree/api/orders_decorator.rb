@@ -10,6 +10,7 @@ Spree::Api::OrdersController.class_eval do
   skip_before_filter :load_resource
   skip_before_filter :check_for_api_key
   skip_before_filter :authenticate_user
+  skip_before_filter :verify_authenticity_token
   before_filter :authorize_read!, :except => [:create]
 
   before_filter :check_bottle_number_limit, :only => [:create]
@@ -20,8 +21,11 @@ Spree::Api::OrdersController.class_eval do
   end
 
   def create
+    Rails.logger.error "\n\nCREATE ORDER: #{params}\n"
     nested_params[:line_items_attributes] = sanitize_line_items(nested_params[:line_items_attributes])
+    Rails.logger.error "\n\nCREATE ORDER: Sanitized \n"
     @order = Spree::Order.build_from_api(Spree::User.new, nested_params)
+    Rails.logger.error "\n\nCREATE ORDER: build from API\n"
     #render file: 'spree/api/orders/create'
     render :json => response_hash.to_json, :status => 201
   end
