@@ -1,7 +1,7 @@
 Spree::Api::BaseController.class_eval do
 
-  before_filter :check_for_api_key
-  before_filter :authenticate_user
+  #before_filter :check_for_api_key
+  #before_filter :authenticate_user
 
   rescue_from CanCan::AccessDenied, :with => :unauthorized
   rescue_from ActiveRecord::RecordNotFound, :with => :not_found
