@@ -5,10 +5,9 @@ describe Spree::Api::CheckoutsController do
 
   before(:each) do
     stub_authentication!
-    Spree::Config[:track_inventory_levels] = false
     Spree::Config[:tax_using_retailer_address] = false
     country_zone = Factory(:zone, name: 'CountryZone')
-    @state = Factory(:state)
+    @state = Factory(:state, abbr: 'NY')
     @country = @state.country
     country_zone.members.create(zoneable: @country)
 
@@ -17,6 +16,9 @@ describe Spree::Api::CheckoutsController do
 
     @retailer = Spree::Retailer.create(name: 'first retailer', payment_method: @payment_method,
                                        phone: '1234567890', email: 'test@test.com')
+    @product = Factory(:product)
+    @variant = Factory(:variant, product: @product)
+    @line_item = Factory(:line_item, variant: @variant, variant_id: @variant.id, quantity: 1)
   end
 
   let(:user) { Factory(:user) }
@@ -32,6 +34,7 @@ describe Spree::Api::CheckoutsController do
     before(:each) do
       Spree::Order.any_instance.stub(confirmation_required?: true)
       Spree::Order.any_instance.stub(payment_required?: true)
+      Spree::Order.any_instance.stub(line_items: [@line_item])
     end
 
     # Broken - email gets added back (wrong email)
@@ -63,6 +66,7 @@ describe Spree::Api::CheckoutsController do
     end
 
     it 'can update addresses and transition from address to delivery' do
+      Spree::Product.any_instance.stub(:state_blacklist).and_return('AL')
       order.update_column(:state, 'address')
       shipping_address = {
         firstname:  'John',
@@ -112,6 +116,27 @@ describe Spree::Api::CheckoutsController do
       json_response['order']['state'].should eq 'complete'
       json_response['order']['payment_method_id'].should eq @payment_method.name
       response.status.should == 200
+    end
+
+    it 'can not transition to delivery unless all items in order are valid for shipping state' do
+      Spree::Product.any_instance.stub(:state_blacklist).and_return('AL, NY, TX')
+      order.update_column(:state, 'address')
+      shipping_address = {
+        firstname:  'John',
+        lastname:   'Doe',
+        address1:   '7735 Old Georgetown Road',
+        city:       'Bethesda',
+        phone:      '3014445002',
+        zipcode:    '20814',
+        state_id:   @state.id,
+        country_id: @country.id
+      }
+      api_put :update,
+              id: order.to_param, order_token: order.token,
+              order: { ship_address_attributes: shipping_address, is_legal_age: true }
+
+      json_response['error'].should eq "Unable to ship all selected products to #{@state.abbr}"
+      response.status.should == 400
     end
 
     it 'returns the order if the order is already complete' do

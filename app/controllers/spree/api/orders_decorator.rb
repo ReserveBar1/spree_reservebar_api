@@ -8,28 +8,17 @@ Spree::Api::OrdersController.class_eval do
   skip_before_filter :access_denied
   skip_before_filter :check_http_authorization
   skip_before_filter :load_resource
-  skip_before_filter :check_for_api_key
-  skip_before_filter :authenticate_user
-  skip_before_filter :verify_authenticity_token
-  before_filter :authorize_read!, :except => [:create]
-
-  before_filter :check_bottle_number_limit, :only => [:create]
-
+  before_filter :check_bottle_number_limit, only: [:create]
 
   def show
-    render :json => response_hash.to_json, :status => 201
+    render json: response_hash.to_json, status: 201
   end
 
   def create
-    Rails.logger.error "\n\nCREATE ORDER: #{params}\n"
     nested_params[:line_items_attributes] = sanitize_line_items(nested_params[:line_items_attributes])
-    Rails.logger.error "\n\nCREATE ORDER: Sanitized \n"
     @order = Spree::Order.build_from_api(Spree::User.new, nested_params)
-    Rails.logger.error "\n\nCREATE ORDER: build from API\n"
-    #render file: 'spree/api/orders/create'
-    render :json => response_hash.to_json, :status => 201
+    render json: response_hash.to_json, status: 201
   end
-
 
   private
 
@@ -43,18 +32,18 @@ Spree::Api::OrdersController.class_eval do
       attributes ||= id
       [id, attributes.slice(*Spree::LineItem.attr_accessible[:api])]
     end
-    line_item_attributes = Hash[line_item_attributes].delete_if { |k,v| v.empty? }
+    Hash[line_item_attributes].delete_if { |_k, v| v.empty? }
   end
 
   def order
     @order ||= Spree::Order.find_by_number!(params[:id])
   end
 
-  def next!(options={})
+  def next!(options = {})
     if @order.valid? && @order.next
-      render :show, :status => options[:status] || 200
+      render :show, status: options[:status] || 200
     else
-      render :could_not_transition, :status => 422
+      render :could_not_transition, status: 422
     end
   end
 
@@ -78,11 +67,11 @@ Spree::Api::OrdersController.class_eval do
 
   def check_bottle_number_limit
     if bottle_quantity > 12
-      render :json => { :error => 'Cannot order more than 12 bottles'}.to_json, :status => 404
+      render json: { error: 'Cannot order more than 12 bottles'}.to_json, status: 404
     end
     if ardbeg_quantity > 1
-      render :json => { :error => 'Cannot order more than 1 bottle of Ardbeg Supernova'}.to_json,
-             :status => 404
+      render json: { error: 'Cannot order more than 1 bottle of Ardbeg Supernova'}.to_json,
+             status: 404
     end
   end
 
