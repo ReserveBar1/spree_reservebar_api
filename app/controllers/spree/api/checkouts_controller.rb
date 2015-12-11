@@ -15,6 +15,8 @@ module Spree
       before_filter :check_for_api_key
       before_filter :authenticate_user
 
+      rescue_from Spree::ApiError, with: :render_error_message
+
       def create
         @order = Order.build_from_api(current_api_user, nested_params)
         render json: response_hash(@order).to_json
@@ -26,18 +28,13 @@ module Spree
         if @order.update_attributes(object_params)
           before_next_state = @order.state
           if @order.next
-            begin
-              state_callback(:after, before_next_state)
-            rescue Spree::ApiError => e
-              render json: { error: e.message }.to_json, status: 400 and return
-            end
+            state_callback(:after, before_next_state)
           else
-            render json: { error: 'Could not transition order state' }.to_json, status: 400
-            return
+            raise Spree::ApiError, 'Could not transition order state'
           end
           render json: response_hash(@order).to_json
         else
-          render json: { error: 'Could not transition order state' }.to_json, status: 400
+          raise Spree::ApiError, 'Could not transition order state'
         end
       end
 
@@ -58,7 +55,7 @@ module Spree
             @order.reload
             params[:order][:payments_attributes].first[:source_attributes][:address_id] = @order.bill_address_id
           else
-            raise 'No Billing Address'
+            raise Spree::ApiError, 'No Billing Address'
           end
 
           if params[:order].present? && params[:order][:payments_attributes].present?
@@ -85,8 +82,8 @@ module Spree
       def load_order
         @order = Spree::Order.find_by_number!(params[:id])
         raise_insufficient_quantity and return if @order.insufficient_stock_lines.present?
-        @order.state = params[:state] if params[:state]
-        state_callback(:before, @order.state)
+        #@order.state = params[:state] if params[:state]
+        #state_callback(:before, @order.state)
       end
 
       def raise_insufficient_quantity
@@ -159,7 +156,7 @@ module Spree
         end
         shipping_state = @order.ship_address.state.abbr
         if blacklist.flatten.include?(shipping_state)
-          fail ApiError, "Unable to ship all selected products to #{shipping_state}"
+          raise Spree::ApiError, "Unable to ship all selected products to #{shipping_state}"
         end
       end
 
@@ -186,6 +183,10 @@ module Spree
           # Effectively, an anonymous user
           @current_api_user = Spree::User.new
         end
+      end
+
+      def render_error_message(e)
+        render json: {error: e.message}.to_json, status: 400
       end
     end
   end
