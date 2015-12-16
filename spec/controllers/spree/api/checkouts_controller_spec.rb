@@ -132,7 +132,7 @@ describe Spree::Api::CheckoutsController do
       }
       api_put :update, id: order.to_param, order_token: order.token, has_accepted_terms: true,
                        order: { payments_attributes: [{ payment_method_id: @payment_method.id }] }
-      json_response['error'].should eq 'No Billing Address'
+      json_response['error'].should eq 'Billing Address is required'
       response.status.should == 400
     end
 
@@ -149,9 +149,11 @@ describe Spree::Api::CheckoutsController do
         state_id:   @state.id,
         country_id: @country.id
       }
+      billing_address = shipping_address
       api_put :update,
               id: order.to_param, order_token: order.token,
-              order: { ship_address_attributes: shipping_address, is_legal_age: true }
+              order: { ship_address_attributes: shipping_address, is_legal_age: true },
+              billing_address: billing_address
 
       json_response['error'].should eq "Unable to ship all selected products to #{@state.abbr}"
       response.status.should == 400

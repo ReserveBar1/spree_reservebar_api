@@ -40,7 +40,7 @@ module Spree
 
       private
 
-      def object_params
+      def check_required_params
         if @order.payment?
           if params[:bill_address].present?
             @order.bill_address_attributes = params[:bill_address]
@@ -50,18 +50,26 @@ module Spree
               bill_address.update_attribute(:user_id, current_user.id) if current_user
               params[:order].delete(:bill_address_id)
             else
-              raise Exceptions::NewBillAddressError
+              fail Exceptions::NewBillAddressError
             end
             @order.reload
             params[:order][:payments_attributes].first[:source_attributes][:address_id] = @order.bill_address_id
-          else
-            raise Spree::ApiError, 'No Billing Address'
           end
 
           if params[:order].present? && params[:order][:payments_attributes].present?
             params[:order][:payments_attributes].first[:amount] = @order.total
           end
         end
+        method_name = :"#{@order.state}_requirements"
+        required_fields = []
+        required_fields = send(method_name) if respond_to?(method_name, true)
+        required_fields.each do |field|
+          fail Spree::ApiError, "#{field.to_s.titleize} is required" unless params[field]
+        end
+      end
+
+      def object_params
+        check_required_params
         params[:order]
       end
 
@@ -103,10 +111,6 @@ module Spree
       def before_delivery
         return if params[:order].present?
         @order.shipping_method ||= (@order.rate_hash.first && @order.rate_hash.first[:shipping_method])
-      end
-
-      def has_checkout_step?(step)
-        step.present? ? self.checkout_steps.include?(step) : false
       end
 
       def order_url(order)
@@ -187,6 +191,10 @@ module Spree
 
       def render_error_message(e)
         render json: {error: e.message}.to_json, status: 400
+      end
+
+      def payment_requirements
+        [:billing_address, :order]
       end
     end
   end
