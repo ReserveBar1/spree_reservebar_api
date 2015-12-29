@@ -194,7 +194,7 @@ module Spree
       end
 
       def payment_requirements
-        [:billing_address, :order]
+        [:bill_address, :order]
       end
     end
   end
