@@ -31,7 +31,7 @@ Spree::Api::BaseController.class_eval do
   end
 
   def unauthorized
-    render 'spree/api/errors/unauthorized', status: 401
+    render json: { error: 'Unauthorized' }, status: 401
   end
 
   def map_nested_attributes_keys(klass, attributes)
