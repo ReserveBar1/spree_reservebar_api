@@ -1,4 +1,8 @@
 Spree::Api::ProductsController.class_eval do
+  include SslRequirement
+
+  ssl_required
+
   def show
     respond_with(@object) do |format|
       format.json {

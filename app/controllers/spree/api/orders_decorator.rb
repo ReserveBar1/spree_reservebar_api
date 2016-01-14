@@ -4,7 +4,7 @@ Spree::Api::OrdersController.class_eval do
 
   respond_to :json
 
-  ssl_allowed
+  ssl_required
   skip_before_filter :access_denied
   skip_before_filter :check_http_authorization
   skip_before_filter :load_resource
