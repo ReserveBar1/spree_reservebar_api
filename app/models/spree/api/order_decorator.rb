@@ -27,12 +27,12 @@ Spree::Order.class_eval do
       begin
         line_item = line_items_hash[k]
 
-        item = self.add_variant(Spree::Variant.find_by_sku(line_item[:variant_id]), line_item[:quantity].to_i)
+        item = self.add_variant(Spree::Variant.where(id: line_item[:variant_id]).first, line_item[:quantity].to_i)
 
-        if line_item.key? :price
-          item.price = line_item[:price]
-          item.save!
-        end
+        #if line_item.key? :price
+          #item.price = line_item[:price]
+          #item.save!
+        #end
       rescue Exception => e
         raise "Order import line items: #{e.message} #{line_item}"
       end

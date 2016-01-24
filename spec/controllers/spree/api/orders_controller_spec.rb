@@ -44,8 +44,7 @@ module Spree
 
     it "can create an order" do
       variant = Factory(:variant)
-      # api uses sku instead of id
-      api_post :create, :order => { :line_items => { "0" => { :variant_id => variant.sku, :quantity => 5 } } }
+      api_post :create, :order => { :line_items => { "0" => { :variant_id => variant.id, :quantity => 5 } } }
       response.status.should == 201
       order = Order.last
       order.line_items.count.should == 1
@@ -56,8 +55,7 @@ module Spree
 
     it 'cannot create an order with more than 12 bottles' do
       variant = Factory(:variant)
-      # api uses sku instead of id
-      api_post :create, :order => { :line_items => { "0" => { :variant_id => variant.sku, :quantity => 13 } } }
+      api_post :create, :order => { :line_items => { "0" => { :variant_id => variant.id, :quantity => 13 } } }
       response.status.should == 404
       json_response['error'].should == 'Cannot order more than 12 bottles'
     end
