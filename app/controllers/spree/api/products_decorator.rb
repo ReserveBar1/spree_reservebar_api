@@ -27,7 +27,7 @@ Spree::Api::ProductsController.class_eval do
         { sku: p.sku,
           name: p.name,
           permalink: p.permalink,
-          id: p.master.id,
+          id: p.id,
           price: p.price,
           states_available: product_ships_to_states(p)
         }
