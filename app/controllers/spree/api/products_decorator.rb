@@ -9,6 +9,7 @@ Spree::Api::ProductsController.class_eval do
         render :json => @object.attributes
                                .merge('sku' => @object.sku)
                                .merge('price' => @object.price)
+                               .merge('id' => @object.master.try(:id))
                                .to_json(object_serialization_options)
       }
     end
@@ -20,12 +21,13 @@ Spree::Api::ProductsController.class_eval do
     return 'brand needed' unless params['brand'].present?
     brand_id = Spree::Brand.find_by_title(params['brand']).id
     products = Spree::Product.active.available.where(brand_id: brand_id)
+    products = products.select { |p| p.master.present? }
     @collection = {
       products: products.map { |p|
         { sku: p.sku,
           name: p.name,
           permalink: p.permalink,
-          id: p.id,
+          id: p.master.id,
           price: p.price,
           states_available: product_ships_to_states(p)
         }
