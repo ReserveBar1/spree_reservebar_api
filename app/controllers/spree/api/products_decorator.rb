@@ -10,6 +10,7 @@ Spree::Api::ProductsController.class_eval do
                                .merge('sku' => @object.sku)
                                .merge('price' => @object.price)
                                .merge('id' => @object.master.try(:id))
+                               .merge('variant_id' => @object.master.try(:id))
                                .to_json(object_serialization_options)
       }
     end
