@@ -5,8 +5,7 @@ Spree::Core::Engine.routes.prepend do
     resources :checkouts
     resources :variants, :only => [:index] do
     end
-
-    put '/shipping_methods', to: 'shipping_methods#index'
+    resources :shipping_methods, :only => [:index]
 
     resources :orders do
       resources :return_authorizations
