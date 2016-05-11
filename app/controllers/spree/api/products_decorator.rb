@@ -21,7 +21,7 @@ Spree::Api::ProductsController.class_eval do
   def collection
     return 'brand needed' unless params['brand'].present?
     brand_id = Spree::Brand.find_by_title(params['brand']).id
-    products = Spree::Product.active.available.where(brand_id: brand_id)
+    products = Spree::Product.active.where(brand_id: brand_id)
     products = products.select { |p| p.master.present? }
     @collection = {
       products: products.map { |p|
